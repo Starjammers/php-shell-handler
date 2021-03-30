@@ -5,7 +5,7 @@ import binascii
 import os
 
 
-basepath = os.path.abspath(__file__)
+basepath = os.path.dirname(os.path.abspath(__file__))
 
 class PHP_Shell_Handler:
     def __init__(self, webshell_url, webshell_get_param="phpshellcmd", encoded=True):
