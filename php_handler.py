@@ -3,6 +3,7 @@ import sys
 from base64 import b64encode, b64decode
 import binascii
 import os
+import argparse
 
 # test change
 
@@ -13,7 +14,7 @@ class PHP_Shell_Handler:
         try:
             web_utils.validate_url(webshell_url)
         except web_utils.InvalidUrlError:
-            print(f"[-] - The provided url: '{url} does not seem to be a valid url'")
+            print(f"[-] - The provided url: '{webshell_url} does not seem to be a valid url'")
             sys.exit(0)
 
         if not web_utils.connection_check(webshell_url):
@@ -22,7 +23,6 @@ class PHP_Shell_Handler:
         self.webshell_url = webshell_url
         self.webshell_get_param = webshell_get_param
         self.encoded = encoded
-        self.shell()
     
     def _encode_cmd(self, cmd):
         encoded_cmd = b64encode(cmd.encode()).decode()
@@ -93,8 +93,30 @@ class PHP_Shell_Handler:
                 print(self._exec_cmd(cmd))
 
 
-# change to allow for args to be passed for url, encoded, phpgetparam
-handler = PHP_Shell_Handler("http://127.0.0.1:9001/encoded_shell.php", encoded=True)
 
+def main():
+    arg_parser = argparse.ArgumentParser(description="Python based tool to interact with php web shells!")
+    arg_parser.add_argument("-u", "--url", help=f"The URL location that your web shell will be uploaded to", required=True)
+    arg_parser.add_argument("-p", "--phpparam", help=f"The name of the php get parameter in the php file uploaded (default of 'phpgetshell' is used with the built in php shells that are suggested to use")
+    arg_parser.add_argument("--encoded", help=f"Decide whether communication with the shell will be encoded or not (default is not encoded)", nargs='*')
+
+    args = arg_parser.parse_args()
+
+    url = args.url
+    if args.phpparam:
+        php_param_name = args.phpparam
+    encoded = False
+    if args.encoded != None:
+        encoded = True
+    if php_param_name:
+        handler = PHP_Shell_Handler(url, encoded=encoded, webshell_get_param=php_param_name)
+    else:
+        handler = PHP_Shell_Handler(url, encoded=encoded)
+        
+    handler.shell()
+
+
+if __name__ == '__main__':
+    main()
         
 
