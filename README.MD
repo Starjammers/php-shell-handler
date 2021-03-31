@@ -24,7 +24,7 @@ optional arguments:
                         The name of the php get parameter used in the php file
                         uploaded (default of 'phpshellcmd' is used with the
                         built in php shells that are suggested to be used
-  --encoded [ENCODED [ENCODED ...]]
+  --encoded
                         Decide whether communication with the shell will be
-                        encoded or not (default is not encoded)
+                        encoded or not (default is not encoded, but add --encoded to allow encoded shells)
 ```
