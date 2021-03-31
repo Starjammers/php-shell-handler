@@ -11,20 +11,18 @@ It is designed to be flexible, and will continually update.
 
 ## python3 php_handler.py --help
 ```bash
-usage: php_handler.py [-h] -u URL [-p PARAM]
-                      [--encoded [ENCODED [ENCODED ...]]]
+usage: php_shell_interact.py [-h] -u URL [-p PARAM] [--encoded] [-o OS]
 
 Python based tool to interact with php web shells!
 
 optional arguments:
   -h, --help            show this help message and exit
-  -u URL, --url URL     The URL location that your web shell will be uploaded
-                        to
+  -u URL, --url URL     The URL location that your web shell will be uploaded to
   -p PARAM, --param PARAM
-                        The name of the php get parameter used in the php file
-                        uploaded (default of 'phpshellcmd' is used with the
-                        built in php shells that are suggested to be used
+                        The name of the php get parameter used in the php file uploaded (default of 'phpshellcmd' is
+                        used with the built in php shells that are suggested to be used
   --encoded
-                        Decide whether communication with the shell will be
-                        encoded or not (default is not encoded, but add --encoded to allow encoded shells)
+                        Decide whether communication with the shell will be encoded or not (default is not encoded,
+                        but add --encoded to allow encoded shells)
+  -o OS, --os OS        Set the operating system to either WINDOWS or UNIX for C2 functionality to work correctly
 ```
