@@ -89,7 +89,7 @@ class PHP_Web_Shell_Handler:
             if file_contents in self._exec_cmd(check_upload_cmd):
                 print(f"[+] - '{local_filepath}'' UPLOADED TO '{remote_filepath}'' ON THE REMOTE SERVER!")
             else:
-                print(f"[?] - '{local_filepath}'' MAY BE UPLAODED to '{remote_filepath}'' ON THE REMOTE SERVER... RUN 'cat {remote_filepath}' TO VALIDATE (AUTO CHECKING FAILED)")
+                print(f"[?] - '{local_filepath}'' MAY BE UPLOADED to '{remote_filepath}'' ON THE REMOTE SERVER... RUN 'cat {remote_filepath}' TO VALIDATE (AUTO CHECKING FAILED)")
 
     def download_file_from_server(self, cmd):
         cmd_args = cmd.split(" ")
@@ -98,6 +98,7 @@ class PHP_Web_Shell_Handler:
             return
         remote_filepath = cmd_args[1]
         local_filepath = cmd_args[2]
+        print("SORRY - THIS IS NOT YET IMPLEMENTED... TRY A 'git pull' in the install directory of this tool and it may be done?")
 
     def switch_webshell(self, cmd):
         cmd_args = cmd.split(" ")
@@ -105,6 +106,7 @@ class PHP_Web_Shell_Handler:
             self.show_help("HELP SWITCHSHELL")
             return 
         new_shell_path = cmd_args[1]
+        print("SORRY - THIS IS NOT YET IMPLEMENTED... TRY A 'git pull' in the install directory of this tool and it may be done?")
 
     def catch_reverse_shell(self, cmd):
         cmd_args = cmd.split(" ")
@@ -113,6 +115,9 @@ class PHP_Web_Shell_Handler:
             return
         listening_ip = cmd_args[1]
         listening_port = cmd_args[2]
+        print("SORRY - THIS IS NOT YET IMPLEMENTED... TRY A 'git pull' in the install directory of this tool and it may be done?")
+
+    # add file remove command?                                                                                                              
 
     def show_help(self, cmd):
         print("[*] - COMMAND HELP:")
