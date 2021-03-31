@@ -29,20 +29,34 @@ def validate_url(url):
     return url
 
 
-def make_request(url, headers=None, retries=0):
-    try:
-        resp = requests.get(url, headers=headers, timeout=5, verify=False)
-    except Exception:
-        if retries > MAX_RETRIES:
-            raise ConnectionError(f"[-] - '{url}' cannot be connected to")
-        else:
-            sleep(1)
-            return make_request(url, headers, retries=retries+1)
+def make_request(url, headers=None, method="GET", post_data={}, timeout=5, retries=0):
+    if method.upper() == "POST":
+        if not post_data:
+            raise InvalidRequestError("No data was provided to post")
+        elif not isinstance(post_data, dict):
+            raise InvalidRequestError("invalid data was provided to post")
+        try:
+            resp = requests.post(url, headers=headers, data=post_data, timeout=timeout)
+        except Exception:
+            if retries > MAX_RETRIES:
+                raise ConnectionError(f"[-] - '{url}' cannot be connected to")
+            else:
+                sleep(1)
+                return make_request(url, headers=headers, method=method, data=post_data, retries=retries+1)
+    else:
+        try:
+            resp = requests.get(url, headers=headers, timeout=timeout, verify=False)
+        except Exception:
+            if retries > MAX_RETRIES:
+                raise ConnectionError(f"[-] - '{url}' cannot be connected to")
+            else:
+                sleep(1)
+                return make_request(url, headers=headers, retries=retries+1)
 
     # maybe further validation of response?
 
     return resp
 
 
-class InvalidUrlError(Exception):
+class InvalidRequestError(Exception):
     pass

