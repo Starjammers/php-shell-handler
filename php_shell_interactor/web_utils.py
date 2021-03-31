@@ -24,7 +24,7 @@ def validate_url(url):
         url = "http://" + url
 
     if not match(url_regex, url):
-        raise InvalidUrlError(f"'{url}' does not seem to be a valid URL")
+        raise InvalidRequestError(f"'{url}' does not seem to be a valid URL")
 
     return url
 
@@ -42,7 +42,7 @@ def make_request(url, headers=None, method="GET", post_data={}, timeout=5, retri
                 raise ConnectionError(f"[-] - '{url}' cannot be connected to")
             else:
                 sleep(1)
-                return make_request(url, headers=headers, method=method, data=post_data, retries=retries+1)
+                return make_request(url, headers=headers, method=method, post_data=post_data, retries=retries+1)
     else:
         try:
             resp = requests.get(url, headers=headers, timeout=timeout, verify=False)
