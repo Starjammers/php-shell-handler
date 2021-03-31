@@ -183,7 +183,7 @@ def main():
     arg_parser = argparse.ArgumentParser(description="Python based tool to interact with php web shells!")
     arg_parser.add_argument("-u", "--url", help=f"The URL location that your web shell will be uploaded to", required=True)
     arg_parser.add_argument("-p", "--param", help=f"The name of the php get parameter used in the php file uploaded (default of '{PHP_Web_Shell_Handler.DEFAULT_WEBSHELL_PARAM}' is used with the built in php shells that are suggested to be used")
-    arg_parser.add_argument("--encoded", help=f"Decide whether communication with the shell will be encoded or not (default is not encoded)", nargs='*')
+    arg_parser.add_argument("--encoded", help=f"Decide whether communication with the shell will be encoded or not (default is not encoded, but add --encoded to allow encoded shells)", nargs='*')
 
     args = arg_parser.parse_args()
 
